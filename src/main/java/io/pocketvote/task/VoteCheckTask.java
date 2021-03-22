@@ -11,7 +11,6 @@ import io.pocketvote.event.VoteEvent;
 public class VoteCheckTask extends ApiRequest {
 
     private PocketVote plugin;
-    private static final Pattern namePattern = Pattern.compile("^[a-zA-Z0-9_ ]{1,16}$");
     
     public VoteCheckTask(PocketVote plugin) {
         super(plugin.isDev() ? "http://127.0.0.1:9000/v2/check" : "https://api.pocketvote.io/v2/check", "GET", "VOTE", null);
@@ -20,7 +19,8 @@ public class VoteCheckTask extends ApiRequest {
         plugin.getLogger().debug("Checking for outstanding votes.");
     }
 
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public void onCompletion(Server server) {
         if(!(super.getResult() instanceof TaskResult)) {
             server.getLogger().error("[PocketVote] Result of " + getClass().getCanonicalName() + " was not an instance of TaskResult.");
@@ -44,7 +44,7 @@ public class VoteCheckTask extends ApiRequest {
         }
 
         for(LinkedHashMap<String, String> vote : result.getVotes()) {
-            if(namePattern.matcher(vote.get("player")).find()) {
+            if(Server.getInstance().getOfflinePlayer(vote.get("player")).hasPlayedBefore()) {
                 server.getPluginManager().callEvent(new VoteEvent(vote.get("player"), vote.get("ip"), vote.get("site")));
             }
         }
